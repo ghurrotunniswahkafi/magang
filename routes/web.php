@@ -34,7 +34,6 @@ Route::get('/booking/individu', [BookingController::class, 'bookingIndividu'])
 Route::post('/booking/individu', [BookingController::class, 'storeIndividu'])
     ->name('booking.individu.store');
 
-
 /*
 |--------------------------------------------------------------------------
 | BOOKING — CORPORATE
@@ -62,6 +61,12 @@ Route::post('/booking/payment/{id}/upload', [BookingController::class, 'uploadBu
 
 Route::get('/booking/success/{id}', [BookingController::class, 'success'])
     ->name('booking.success');
+
+Route::post('/booking/success/{id}', [BookingController::class, 'success'])
+    ->name('booking.success');
+
+Route::get('/booking/voucher/{id}', [BookingController::class, 'voucher'])
+    ->name('booking.voucher');
 
 // Public user status page (for testing only)
 Route::get('/user/test', function(){
@@ -151,6 +156,9 @@ Route::middleware([\App\Http\Middleware\AdminAuth::class])->group(function () {
     | REPORTS
     |--------------------------------------------------------------------------
     */
+
+    Route::post('/booking/payment/{id}', [BookingController::class, 'uploadBuktiPembayaran'])->name('booking.payment.upload');
+    Route::post('/booking/payment/cash/{id}', [BookingController::class, 'confirmCash'])->name('booking.payment.cash');
     Route::get('/admin/report/pdf', [\App\Http\Controllers\ReportController::class, 'exportPdf'])->name('report.pdf');
     Route::get('/admin/report/csv', [\App\Http\Controllers\ReportController::class, 'exportCsv'])->name('report.csv');
     Route::get('/admin/report/monthly', [\App\Http\Controllers\ReportController::class, 'monthly'])->name('report.monthly');

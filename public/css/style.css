@@ -63,6 +63,11 @@ body {
   font-size: 3.5rem;
   margin: 0;
   line-height: 1.2;
+
+  display: inline-block;
+  background: #f1cfc4;
+  padding: 6px 12px;
+  border-radius: 6px;
 }
 
 .info h2 {
@@ -72,7 +77,13 @@ body {
   text-align: justify;
   text-justify: inter-word;
   line-height: 1.3;
+
+  display: inline-block;
+  background: #f1cfc4;
+  padding: 6px 12px;
+  border-radius: 6px;
 }
+
 
 
 .navigation-manual {
@@ -327,6 +338,7 @@ body {
 
 .availability-check p {
     margin-bottom: 8px;
+    margin-top: 38px;
 }
 
 .availability-check label {
@@ -335,7 +347,7 @@ body {
     color: #333;
 }
 
-.availability-check input[type="date"] {
+.availability-check input {
     padding: 6px 10px;
     border: 2px solid #b1193f;
     border-radius: 10px;
@@ -345,7 +357,7 @@ body {
     font-size: 0.95rem;
 }
 
-.availability-check input[type="date"]:focus {
+.availability-check input:focus {
     border-color: #FF5F5F;
     box-shadow: 0 0 5px rgba(245, 128, 94, 0.5);
 }
@@ -952,4 +964,3 @@ iframe {
     font-size: 15px;
   }
 }
-

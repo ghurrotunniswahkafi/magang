@@ -18,7 +18,7 @@
         <div id="location" class="panel">
             <button class="close-btn" onclick="closePanel(event)">✕</button>
             <h2>Our Location</h2>
-            <p>We’re located in the heart of the city — just a few minutes from the central station. Come visit us and enjoy the view!</p>
+            <p>We're located in the heart of the city — just a few minutes from the central station. Come visit us and enjoy the view!</p>
             <div class="map-container">
                 <iframe 
                 src="{{ $data->maps_link }}" 
@@ -91,12 +91,29 @@
     
     <div class="container swiper">
         <h1 class="fade-top animate-hidden">Our Room</h1>
+            <div class="availability-check fade-right animate-hidden">
+        <p>Cek Ketersediaan Kamar</p>
+        <form id="cekForm" action="{{ route('beranda.show') }}" method="GET">
+            <label>Check In :</label>
+            <input type="date" id="checkin" name="checkin" required value="{{ request('checkin') }}">
+
+            <label>Check Out :</label>
+            <input type="date" id="checkout" name="checkout" required value="{{ request('checkout') }}">
+
+            <label>Jumlah Kamar :</label>
+            <input type="number" id="jumlahkamar" name="jumlahkamar" min="1" placeholder="1" required value="{{ request('jumlahkamar', 1) }}">
+            <button type="submit" class="cek-btn">Cek</button>
+        </form>
+    </div>
         <div class="card-wrapper fade-left animate-hidden">
             <ul class="card-list swiper-wrapper">
                 @forelse($roomTypes as $room)
                     @php
                         $fasilitasList = explode(',', $room->fasilitas);
                         $fasilitasPreview = array_slice($fasilitasList, 0, 2);
+                        
+                        $checkinParam = request('checkin');
+                        $checkoutParam = request('checkout');
                     @endphp
                 <li class="card-item swiper-slide">
                     <div href="#" class="card-link">
@@ -142,8 +159,15 @@
                             <div class="dropdown">
                                 <button class="book-now">Book Now ▾</button>
                                 <div class="dropdown-content">
-                                    <a href="{{ route('booking.corporate', ['kamar' => $room->kamar_id]) }}">Corporate Booking Form</a>
-                                    <a href="{{ route('booking.individu', ['kamar' => $room->kamar_id]) }}">Personal Booking Form</a>
+                                    <a href="javascript:void(0)"
+                                    onclick="processBooking('corporate', '{{ $room->kamar_id }}')">
+                                    Corporate Booking Form
+                                    </a>
+                                    
+                                    <a href="javascript:void(0)"
+                                    onclick="processBooking('individu', '{{ $room->kamar_id }}')">
+                                    Personal Booking Form
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -158,18 +182,7 @@
         <div class="swiper-slide-button swiper-button-prev"></div>
         <div class="swiper-slide-button swiper-button-next"></div>
     </div>
-    <div class="availability-check fade-right animate-hidden">
-        <p>Cek Ketersediaan Kamar</p>
-        <form id="cekForm" action="{{ route('beranda.show') }}" method="GET">
-            <label>Check In :</label>
-            <input type="date" id="checkin" name="checkin" required>
-
-            <label>Check Out :</label>
-            <input type="date" id="checkout" name="checkout" required>
-
-            <button type="submit" class="cek-btn">Cek</button>
-        </form>
-    </div>
+    
     <div id="dropdown-portal"></div>
     <div id="roomPopup" class="popup-overlay">
         <div class="popup-content">
@@ -177,8 +190,19 @@
             <h2 id="popupTitle"></h2>
             <ul id="popupFeatures"></ul>
             <div class="dropdown-content" style="display:none">
-                <a href="{{ route('booking.corporate', ['kamar' => $room->kamar_id]) }}">Corporate Booking Form</a>
-                <a href="{{ route('booking.individu', ['kamar' => $room->kamar_id]) }}">Personal Booking Form</a>
+                @if(isset($room))
+                    <a href="{{ route('booking.corporate', [
+                        'kamar' => $room->kamar_id,
+                        'checkin' => request('checkin'),
+                        'checkout' => request('checkout')
+                    ]) }}">Corporate Booking Form</a>
+                    
+                    <a href="{{ route('booking.individu', [
+                        'kamar' => $room->kamar_id,
+                        'checkin' => request('checkin'),
+                        'checkout' => request('checkout')
+                    ]) }}">Personal Booking Form</a>
+                @endif
             </div>
             <button class="book-now">Book Now ▾</button>
         </div>
@@ -211,5 +235,33 @@
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="js/script.js"></script>
+<script>
+    function processBooking(type, kamarId) {
+        
+        let checkIn = document.getElementById('checkin').value;
+        let checkOut = document.getElementById('checkout').value;
+        let jumlahKamar = document.getElementById('jumlahkamar').value;
+
+       
+        if (!checkIn || !checkOut) {
+            alert('Harap pilih tanggal Check-in dan Check-out terlebih dahulu pada menu di atas!');
+           
+            document.querySelector('.availability-check').scrollIntoView({ behavior: 'smooth' });
+            return; 
+        }
+
+        
+        let baseUrl = "";
+        if (type === 'corporate') {
+            baseUrl = "{{ route('booking.corporate') }}"; 
+        } else {
+            baseUrl = "{{ route('booking.individu') }}";
+        }
+
+     
+        let finalUrl = `${baseUrl}?kamar=${kamarId}&checkin=${checkIn}&checkout=${checkOut}&jumlah_kamar=${jumlahKamar}`;
+        window.location.href = finalUrl;
+    }
+</script>
 </body>
 </html>

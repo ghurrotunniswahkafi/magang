@@ -10,6 +10,7 @@
   .data-table tbody td{background:#fff;padding:12px;border-bottom:1px solid #f0e1e5}
   .btn-confirm{background:#10b981;color:#fff;border:0;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600}
   .btn-confirm:hover{background:#059669}
+  .btn-confirm:disabled{background:#ccc;cursor:not-allowed;}
   .btn-reject{background:#ef4444;color:#fff;border:0;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600}
   .btn-reject:hover{background:#dc2626}
   .status-badge{padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600}
@@ -94,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <th>No</th>
           <th>Nama Tamu</th>
           <th>Jenis</th>
-          <th>Check-in / Check-out</th>
+          <th>Metode Bayar</th> <th>Check-in / Check-out</th>
           <th>Kode Kamar</th>
           <th>Kamar Dipilih</th>
           <th>Kontak</th>
@@ -119,6 +120,13 @@ document.addEventListener('DOMContentLoaded', function() {
             @endif
           </td>
           <td><span style="background:{{ strtolower($p->jenis_tamu) == 'corporate' ? '#28a745' : '#007bff' }};color:#fff;padding:4px 10px;border-radius:12px;font-size:12px">{{ ucfirst($p->jenis_tamu) }}</span></td>
+          
+          <td>
+             <span style="font-weight:bold; color: #a0203c;">
+                {{ $p->metode_pembayaran ?? '-' }}
+             </span>
+          </td>
+
           <td>{{ $p->check_in }}<br>s/d {{ $p->check_out }}</td>
           <td>{{ $p->kode_kamar ?? '-' }}</td>
           <td>
@@ -153,7 +161,6 @@ document.addEventListener('DOMContentLoaded', function() {
           <td>
             @if($p->bukti_pembayaran)
               @php
-                // normalize path: if stored as 'public/xxx' remove prefix for disk access
                 $relPath = \Illuminate\Support\Str::startsWith($p->bukti_pembayaran, 'public/') ? substr($p->bukti_pembayaran, 7) : $p->bukti_pembayaran;
                 $fileExists = Storage::disk('public')->exists($relPath);
               @endphp
@@ -163,7 +170,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span style="color:#dc2626;">⚠️ File hilang</span>
               @endif
             @else
-              <span style="color:#999">Belum upload</span>
+                @if($p->metode_pembayaran == 'Via Cash')
+                    <span style="color:#28a745; font-weight:bold;">Bayar di Tempat</span>
+                @else
+                    <span style="color:#999">Belum upload</span>
+                @endif
             @endif
           </td>
           <td>
@@ -177,7 +188,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <form action="{{ route('pengunjung.approve', $p->id) }}" method="POST" style="margin:0">
                 @csrf
-                <button type="submit" class="btn-confirm" {{ !$p->bukti_pembayaran ? 'disabled title=Butuh bukti pembayaran' : '' }}>
+                <button type="submit" class="btn-confirm" 
+                    {{ (!$p->bukti_pembayaran && $p->metode_pembayaran !== 'Via Cash') ? 'disabled title=Butuh_bukti_pembayaran' : '' }}>
                   Konfirmasi
                 </button>
               </form>
@@ -189,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </td>
         </tr>
         @empty
-        <tr><td colspan="11" style="text-align:center;color:#999;padding:32px">Tidak ada pembayaran yang perlu dikonfirmasi</td></tr>
+        <tr><td colspan="12" style="text-align:center;color:#999;padding:32px">Tidak ada pembayaran yang perlu dikonfirmasi</td></tr>
         @endforelse
       </tbody>
     </table>

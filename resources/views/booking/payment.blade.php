@@ -67,7 +67,7 @@
       border:none;
       font-weight:700;
       font-size:18px;
-      color:#d09000;
+      color:#be0e4f;
       cursor:pointer;
       padding:8px 0;
   }
@@ -84,6 +84,10 @@
   .accordion-content.show{
       display:block;
   }
+
+  /* === Hide upload section by default === */
+  #uploadSection { display: none; }
+  #cashButton { display:none; }
 </style>
 
 <div class="container py-4">
@@ -153,47 +157,82 @@
         <h5 class="mb-3 fw-bold">Method Payments</h5>
 
         <div class="accordion-item">
-            <button class="accordion-btn">➤ Via ATM</button>
+            <label class="accordion-btn">
+                <input type="radio" name="metode" value="Via ATM" class="payment-select" style="margin-right:6px;">
+                Via ATM
+            </label>
             <div class="accordion-content">
                 <ol>
                     <li>Masukkan kartu ATM dan PIN Anda.</li>
-                    <li>Pilih menu "Transfer" lalu "Bank Lain" atau "Transfer Antar Bank".</li>
-                    <li>Masukkan kode bank Bukopin <b>(441)</b>, diikuti nomor rekening tujuan.</li>
-                    <li>Masukkan jumlah uang.</li>
-                    <li>Cek kembali data, lalu pilih "Benar" / "Ya".</li>
+                    <li>Pilih menu "Transfer" → "Bank Lain" / "Transfer Antar Bank".</li>
+                    <li>Masukkan kode bank Bukopin (441) + nomor rekening tujuan.</li>
+                    <li>Masukkan jumlah uang yang ingin ditransfer.</li>
+                    <li>Cek data → pilih "Benar" / "Ya".</li>
                 </ol>
             </div>
         </div>
 
         <div class="accordion-item">
-            <button class="accordion-btn">➤ Via Mobile Banking</button>
+            <label class="accordion-btn">
+                <input type="radio" name="metode" value="Via Mobile Banking" class="payment-select" style="margin-right:6px;">
+                Via Mobile Banking
+            </label>
             <div class="accordion-content">
                 <ol>
-                    <li>Buka aplikasi mobile banking Bukopin (BISA Mobile) dan login.</li>
-                    <li>Pilih menu "Transfer Dana" atau "Transfer Antar Bank".</li>
-                    <li>Masukkan kode bank <b>(441)</b> dan nomor rekening tujuan.</li>
+                    <li>Buka aplikasi mobile banking Bukopin & login.</li>
+                    <li>Pilih menu "Transfer Dana" / "Transfer Antar Bank".</li>
+                    <li>Masukkan kode bank (441) + nomor rekening tujuan.</li>
                     <li>Masukkan jumlah uang.</li>
-                    <li>Konfirmasi dan masukkan PIN.</li>
+                    <li>Konfirmasi → masukkan PIN.</li>
                 </ol>
             </div>
         </div>
 
-        {{-- Upload proof --}}
-        <form class="upload-box mt-4" 
-              action="{{ route('booking.payment.upload', $pengunjung->id) }}" 
-              method="POST" 
-              enctype="multipart/form-data" 
-              id="paymentForm">
+        <div class="accordion-item">
+            <label class="accordion-btn">
+                <input type="radio" name="metode" value="Via Cash" class="payment-select" style="margin-right:6px;">
+                Via Cash (Bayar di Tempat)
+            </label>
+            <div class="accordion-content">
+                <ol>
+                    <li>Datang ke kasir setelah reservasi.</li>
+                    <li>Sebutkan nama pemesan / bukti reservasi.</li>
+                    <li>Bayar sesuai nominal.</li>
+                    <li>Terima struk sebagai bukti.</li>
+                </ol>
+            </div>
+        </div>
 
-          @csrf
-          <label class="fw-bold mb-1">Upload Bukti Pembayaran</label>
-          <input type="file" name="bukti_pembayaran" id="buktiFile" accept=".jpg,.jpeg,.png,.pdf" required>
-          <small class="text-muted">Format: JPG, PNG, PDF (Max 2MB).</small>
+        {{-- Upload Section (Untuk ATM/M-Banking) --}}
+        <div id="uploadSection">
+          <form class="upload-box mt-4"
+                action="{{ route('booking.payment.upload', $pengunjung->id) }}"
+                method="POST"
+                enctype="multipart/form-data"
+                id="paymentForm">
 
-          <div class="mt-3">
-            <button type="submit" class="btn-maroon">Kirim Bukti</button>
-          </div>
-        </form>
+            @csrf
+            {{-- HIDDEN FIELD UNTUK METODE PEMBAYARAN --}}
+            <input type="hidden" name="metode_pembayaran" id="payment_method_upload">
+            
+            <label class="fw-bold mb-1">Upload Bukti Pembayaran</label>
+            <input type="file" name="bukti_pembayaran" id="buktiFile" accept=".jpg,.jpeg,.png,.pdf" required>
+            <small class="text-muted">Format: JPG, PNG, PDF (Max 2MB).</small>
+
+            <div class="mt-3">
+              <button type="submit" class="btn-maroon">Kirim Bukti</button>
+            </div>
+          </form>
+        </div>
+
+        {{-- Cash Button (Untuk Tunai) --}}
+        <div id="cashButton" class="mt-4">
+            <form action="{{ route('booking.payment.cash', $pengunjung->id) }}" method="POST">
+                @csrf
+                <input type="hidden" name="metode_pembayaran" value="Via Cash">
+                <button class="btn-maroon w-100 d-block">BOOKING NOW (BAYAR DI TEMPAT)</button>
+            </form>
+        </div>
 
       </div>
     </div>
@@ -203,9 +242,7 @@
       <div class="card-section h-100">
 
         <h5>Booking Summary</h5>
-
         <div class="border rounded p-3 mb-3">
-
           <div class="row">
             <div class="col-6">
               <div class="fw-bold">CHECK-IN</div>
@@ -227,19 +264,17 @@
               <div>{{ $durasi ?? '-' }} hari</div>
             </div>
           </div>
-
         </div>
 
         <h5>Price Summary</h5>
-
         <div class="d-flex justify-content-between">
           <span>Hunian ({{ $kamar->jenis_kamar }})</span>
           <span>Rp{{ number_format($kamar->harga,0,',','.') }}</span>
         </div>
 
         <small class="text-muted d-block mb-2">
-            {{ $pengunjung->jumlah_kamar }} kamar × 
-            {{ $durasi }} hari × 
+            {{ $pengunjung->jumlah_kamar }} kamar ×
+            {{ $durasi }} hari ×
             Rp{{ number_format($kamar->harga,0,',','.') }}
             = <strong>Rp{{ number_format($totalKamar,0,',','.') }}</strong>
         </small>
@@ -260,49 +295,57 @@
     </div>
 
   </div>
-
 </div>
 
-{{-- Accordion Script --}}
+{{-- SCRIPT INTERAKTIF --}}
 <script>
-document.querySelectorAll(".accordion-btn").forEach(btn => {
-    btn.addEventListener("click", function() {
-        this.nextElementSibling.classList.toggle("show");
+document.querySelectorAll(".payment-select").forEach(radio => {
+    radio.addEventListener("change", function () {
+        const selectedValue = this.value; // Contoh: "Via ATM" atau "Via Cash"
+        const upload = document.getElementById("uploadSection");
+        const cashBtn = document.getElementById("cashButton");
+        const contents = document.querySelectorAll(".accordion-content");
+
+        // 1. Tampilkan Accordion
+        contents.forEach(c => c.classList.remove("show"));
+        this.closest(".accordion-item").querySelector(".accordion-content").classList.add("show");
+
+        // 2. Logika Tampilan Tombol
+        if (selectedValue === "Via Cash") {
+            // Jika Cash -> Sembunyikan Upload, Tampilkan Tombol Cash
+            upload.style.display = "none";
+            cashBtn.style.display = "block";
+        } else {
+            // Jika ATM/M-Banking -> Tampilkan Upload, Sembunyikan Tombol Cash
+            upload.style.display = "block";
+            cashBtn.style.display = "none";
+            
+            // Masukkan nilai yang dipilih ke dalam input hidden form upload
+            document.getElementById("payment_method_upload").value = selectedValue;
+        }
     });
 });
-</script>
 
-{{-- Upload Validation --}}
-<script>
+// Validasi File Upload (SweetAlert)
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('paymentForm');
     const fileInput = document.getElementById('buktiFile');
 
-    form.addEventListener('submit', function(e) {
-        if (!fileInput.files.length) {
-            e.preventDefault();
-            Swal.fire({
-                icon: 'warning',
-                title: 'File Belum Dipilih',
-                text: 'Silakan pilih file bukti pembayaran.',
-                confirmButtonColor: '#a0203c'
-            });
-            return false;
-        }
-
-        const file = fileInput.files[0];
-        if (file.size > 2 * 1024 * 1024) {
-            e.preventDefault();
-            Swal.fire({
-                icon: 'error',
-                title: 'File Terlalu Besar',
-                text: 'Ukuran file maksimal 2MB.',
-                confirmButtonColor: '#a0203c'
-            });
-            return false;
-        }
-    });
+    if(form) {
+        form.addEventListener('submit', function(e) {
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                alert('Silakan pilih file bukti pembayaran.');
+                return false;
+            }
+            const file = fileInput.files[0];
+            if (file.size > 2 * 1024 * 1024) { // 2MB
+                e.preventDefault();
+                alert('Ukuran file maksimal 2MB.');
+                return false;
+            }
+        });
+    }
 });
 </script>
-
 @endsection
