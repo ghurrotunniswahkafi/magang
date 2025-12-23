@@ -1,4 +1,4 @@
-<?php
+\<?php
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -53,11 +53,16 @@ Route::post('/booking/corporate', [BookingController::class, 'storeCorporate'])
 | PAYMENT (Public)
 |--------------------------------------------------------------------------
 */
+
 Route::get('/booking/payment/{id}', [BookingController::class, 'payment'])
     ->name('booking.payment');
 
 Route::post('/booking/payment/{id}/upload', [BookingController::class, 'uploadBuktiPembayaran'])
     ->name('booking.payment.upload');
+
+/* ✅ INI YANG DIPAKAI (PUBLIC) */
+Route::post('/booking/payment/cash/{id}', [BookingController::class, 'confirmCash'])
+    ->name('booking.payment.cash');
 
 Route::get('/booking/success/{id}', [BookingController::class, 'success'])
     ->name('booking.success');
@@ -74,7 +79,12 @@ Route::get('/user/test', function(){
     $kamarKosong = \App\Models\Kamar::where('status','kosong')->count();
     $jumlahPengunjung = \App\Models\Pengunjung::count();
     $pendingPayments = \App\Models\Pengunjung::where('payment_status','pending')->count();
-    return view('user.status', compact('totalKamar','kamarKosong','jumlahPengunjung','pendingPayments'));
+    return view('user.status', compact(
+        'totalKamar',
+        'kamarKosong',
+        'jumlahPengunjung',
+        'pendingPayments'
+    ));
 })->name('user.test');
 
 /*
@@ -86,7 +96,7 @@ Route::get('/user/test', function(){
 // AUTH
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('auth.login');
 Route::post('/login', [AuthController::class, 'login'])->name('auth.login.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('auth.logout');
 
 /*
 |--------------------------------------------------------------------------
@@ -97,26 +107,29 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->
 Route::middleware([\App\Http\Middleware\AdminAuth::class])->group(function () {
 
     // Dashboard Admin
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
+        ->name('admin.dashboard');
 
     // Beranda Management (Admin only)
-    Route::get('/beranda', [BerandaController::class, 'edit'])->name('beranda.edit');
-    Route::put('/beranda/{id}', [BerandaController::class, 'update'])->name('beranda.update');
+    Route::get('/beranda', [BerandaController::class, 'edit'])
+        ->name('beranda.edit');
+
+    Route::put('/beranda/{id}', [BerandaController::class, 'update'])
+        ->name('beranda.update');
 
     /*
     |--------------------------------------------------------------------------
     | KAMAR Management
     |--------------------------------------------------------------------------
     */
-    // Primary route using KamarController
     Route::get('/admin/kamar', [KamarController::class, 'index'])->name('kamar.index');
     Route::get('/admin/kamar/tambah', [KamarController::class, 'create'])->name('kamar.create');
     Route::post('/admin/kamar/simpan', [KamarController::class, 'store'])->name('kamar.store');
     Route::get('/admin/kamar/edit/{id}', [KamarController::class, 'edit'])->name('kamar.edit');
     Route::post('/admin/kamar/update/{id}', [KamarController::class, 'update'])->name('kamar.update');
     Route::get('/admin/kamar/hapus/{id}', [KamarController::class, 'destroy'])->name('kamar.destroy');
-    
-    // Alternative kamar admin routes (for price & photo management)
+
+    // Alternative kamar admin routes
     Route::get('/admin/kamar/manage', [KamarAdminController::class, 'index'])->name('admin.kamar.index');
     Route::post('/admin/kamar/manage/{id}', [KamarAdminController::class, 'update'])->name('admin.kamar.update');
 
@@ -137,7 +150,7 @@ Route::middleware([\App\Http\Middleware\AdminAuth::class])->group(function () {
     Route::get('/admin/pengunjung/edit/{id}', [PengunjungController::class, 'edit'])->name('pengunjung.edit');
     Route::post('/admin/pengunjung/update/{id}', [PengunjungController::class, 'update'])->name('pengunjung.update');
     Route::get('/admin/pengunjung/hapus/{id}', [PengunjungController::class, 'destroy'])->name('pengunjung.destroy');
-    
+
     // Check-in / Check-out
     Route::get('/admin/pengunjung/{id}/checkin', [PengunjungController::class, 'showCheckin'])->name('pengunjung.checkin');
     Route::post('/admin/pengunjung/{id}/checkin', [PengunjungController::class, 'processCheckin'])->name('pengunjung.checkin.process');
@@ -148,22 +161,18 @@ Route::middleware([\App\Http\Middleware\AdminAuth::class])->group(function () {
     | ADMIN REPORTS
     |--------------------------------------------------------------------------
     */
-    // Booking export PDF
     Route::get('/admin/bookings/pdf', [BookingController::class, 'exportPdf'])->name('booking.pdf');
-    
+
     /*
     |--------------------------------------------------------------------------
     | REPORTS
-    |--------------------------------------------------------------------------
-    */
+    |-------------------------------------------------------------------------
 
-    Route::post('/booking/payment/{id}', [BookingController::class, 'uploadBuktiPembayaran'])->name('booking.payment.upload');
-    Route::post('/booking/payment/cash/{id}', [BookingController::class, 'confirmCash'])->name('booking.payment.cash');
+    /* DUPLIKAT CASH DIHAPUS — INI INTI PERBAIKAN */
+
     Route::get('/admin/report/pdf', [\App\Http\Controllers\ReportController::class, 'exportPdf'])->name('report.pdf');
     Route::get('/admin/report/csv', [\App\Http\Controllers\ReportController::class, 'exportCsv'])->name('report.csv');
     Route::get('/admin/report/monthly', [\App\Http\Controllers\ReportController::class, 'monthly'])->name('report.monthly');
     Route::get('/admin/report/monthly/pdf', [\App\Http\Controllers\ReportController::class, 'exportMonthlyPdf'])->name('report.monthly.pdf');
     Route::get('/admin/report/monthly/csv', [\App\Http\Controllers\ReportController::class, 'exportMonthlyCsv'])->name('report.monthly.csv');
 });
-
-//tmnh
